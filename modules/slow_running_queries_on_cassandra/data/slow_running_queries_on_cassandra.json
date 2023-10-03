@@ -1,0 +1,114 @@
+{
+  "name": "slow_running_queries_on_cassandra",
+  "description": "This incident type relates to identifying slow running queries on the Cassandra database and determining the users responsible for running them. Slow queries can cause performance issues and impact the overall efficiency of the system. Identifying and troubleshooting slow queries is crucial for maintaining optimal performance and ensuring smooth operations of the database. The incident may require investigating the root cause of the slow queries, optimizing the database configuration and queries, and providing recommendations to mitigate future incidents.",
+  "params": [
+    {
+      "name": "SESSION_ID",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_NAME",
+      "value": ""
+    },
+    {
+      "name": "CASSANDRA_SERVER_IP",
+      "value": ""
+    },
+    {
+      "name": "THRESHOLD_IN_MICROSECONDS",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Slow Running Queries on Cassandra\nThis incident type relates to identifying slow running queries on the Cassandra database and determining the users responsible for running them. Slow queries can cause performance issues and impact the overall efficiency of the system. Identifying and troubleshooting slow queries is crucial for maintaining optimal performance and ensuring smooth operations of the database. The incident may require investigating the root cause of the slow queries, optimizing the database configuration and queries, and providing recommendations to mitigate future incidents."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 1. Connect to the Cassandra database"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `cqlsh ${CASSANDRA_SERVER_IP}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 2. Enable tracing of slow queries"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `TRACING ON;`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 3. Execute a query to identify slow running queries"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `SELECT * FROM system_traces.sessions WHERE duration > ${THRESHOLD_IN_MICROSECONDS};`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 4. Identify the user running the slow query"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `SELECT user FROM system_traces.events WHERE session_id = ${SESSION_ID};`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 5. Kill the slow query by session ID"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `KILL ${SESSION_ID};`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Identify the queries that are running slowly and analyze their execution plans to determine the root cause of the issue. This could involve examining the query syntax, identifying any poorly optimized queries, or checking for inefficient use of indexes."
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_slow_query_analysis()"
+    }
+  ]
+}
